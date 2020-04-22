@@ -16,3 +16,7 @@ def get_dress_code():
     response = requests.get(url)
     response = response.json()
     return responses
+
+location= input("Enter the city you reside in: ")
+coordinates = get_coordinates(location)
+restaurants = get_dress_code()
