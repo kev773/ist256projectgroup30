@@ -1,0 +1,16 @@
+import requests
+from pprint import pprint
+
+key = "f71442e7a082aa773da23647ab9c0650"
+url = f"https://developers.zomato.com/api/v2.1/cities?lat={latitude}&lon={longitude}"
+header = {"User-agent": "curl/7.43.0", "Accept": "application/json", "user_key": key}
+
+response = requests.get(url, headers = header)
+data = response.json()
+
+
+
+for item in data["best_rated_restaurant"]:
+    print(item['restaurant']['name'])
+    print(item['restaurant']['location']['address'])
+    print(item['restaurant']['cuisines'])
