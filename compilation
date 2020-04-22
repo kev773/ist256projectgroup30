@@ -1,0 +1,53 @@
+#not final product
+#still requires a lot of fine tuning and returning errors in certain areas
+
+!pip install opencage
+from opencage.geocoder import OpenCageGeocode
+import requests
+import json 
+
+def get_coordinates(location):
+    key = "b95381b5aa684519970f06c731aa464a"
+    geocoder = OpenCageGeocode(key) 
+    coordinates = geocoder.geocode(location)[0]['geometry']
+    return coordinates
+
+#coordinates = get_coordinates('Chicago')
+
+def get_dress_code():
+    #clothing = 'jeans'
+    lat = coordinates['lat']
+    lng = coordinates['lng']
+    url = f"http://dresscodefinder.com/venues/search.json?latitude={lat}&longitude={lng}"
+    #search_term={clothing}
+    response = requests.get(url)
+    response = response.json()
+    return response
+
+#get_dress_code()
+url ="http://dresscodefinder.com/venues/search.json?search_term=jean"
+reponse = requests.get(url)
+data = response.json()
+data
+
+#clothing = input("Enter the type of clothing you would like to wear, fancy or casual: ")
+#if clothing == 'casual':
+    #clothingarticle = input("Enter an article of clothing you would like to wear, jeans or shorts: ")
+#elif clothing == 'fancy':
+    #clothing article = input("Enter an article of clothing you would like to wear, suits or dress: ")
+
+location= input("Enter the city you reside in: ")
+coordinates = get_coordinates(location)
+latitude = coordinates['lat']
+longitude = coordinates['lng']
+coordinates    
+
+
+key = "f71442e7a082aa773da23647ab9c0650"
+url = f"https://developers.zomato.com/api/v2.1/cities?lat={latitude}&lon={longitude}"
+header = {"User-agent": "curl/7.43.0", "Accept": "application/json", "user_key": key}
+#"User-agent": "curl/7.43.0",
+response = requests.get(url, headers = header)
+data = response.json()
+data
+#pprint(response.json())
