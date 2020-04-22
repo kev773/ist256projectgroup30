@@ -8,9 +8,23 @@ header = {"User-agent": "curl/7.43.0", "Accept": "application/json", "user_key":
 response = requests.get(url, headers = header)
 data = response.json()
 
-
-
 for item in data["best_rated_restaurant"]:
     print(item['restaurant']['name'])
     print(item['restaurant']['location']['address'])
     print(item['restaurant']['cuisines'])
+
+#zomato = zomatopy.initialize_app(config)
+#city_ID = zomato.get_city_ID(location)
+#collections_dictionary = zomato.get_collections(city_ID, limit=10)
+#collections_dictionary
+
+#restaurant_dictionary = get_nearby_restaurants(latitude, longitude)
+#restaurant_details = get_restaurant(restaurant_ID)
+
+# restaurant_details.name gives the restaurant name.
+# restaurant_details.url gives the restaurant Zomato URL.
+# restaurant_details.location gives the restaurant location.
+# restaurant_details.city gives the restaurant city name.
+# restaurant_details.city_ID gives the restaurant city's ID.
+# restaurant_details.user_rating gives the restaurant rating.
+
