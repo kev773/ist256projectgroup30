@@ -1,0 +1,18 @@
+!pip install opencage
+from opencage.geocoder import OpenCageGeocode
+import requests
+import json 
+
+def get_coordinates(location):
+    key = "b95381b5aa684519970f06c731aa464a"
+    geocoder = OpenCageGeocode(key) 
+    coordinates = geocoder.geocode(location)[0]['geometry']
+    return coordinates
+  
+def get_dress_code():   
+    lat = coordinates['lat']
+    lng = coordinates['lng']
+    url = f"http://dresscodefinder.com/venues/search.json?search_term={clothing}&latitude={lat}&longitude={lng}"
+    response = requests.get(url)
+    response = response.json()
+    return responses
