@@ -1,0 +1,65 @@
+!pip install opencage
+from opencage.geocoder import OpenCageGeocode
+
+import requests
+import json 
+import pandas as pd
+import folium 
+from pandas.io.json import json_normalize
+from pprint import pprint
+
+from IPython.display import display, HTML
+display(HTML("<h1><i><u>Resturants Near You</u></i></h1>"))
+display(HTML("<h4><i>brought to you by IST 256 Group 30</i></h4>"))
+
+def get_coordinates(location):
+    key = "b95381b5aa684519970f06c731aa464a"
+    geocoder = OpenCageGeocode(key) 
+    coordinates = geocoder.geocode(location)[0]['geometry']
+    return coordinates
+
+def get_forecast(coordinates):
+    darkskykey = "443a4203c3f7801ddcd986b1edae011e"
+    latitude = coordinates['lat']
+    longitude = coordinates['lng']
+    url = f"https://api.darksky.net/forecast/{darkskykey}/{latitude},{longitude}" #url requires key,lat, and lng to work
+    response = requests.get(url)
+    response = response.json()
+    forecast_for_week = response['daily']['data'] #retrieving the forecast data for the next 7 days
+    return forecast_for_week
+
+def get_city_id(key, city_state):
+    
+    url = "https://developers.zomato.com/api/v2.1/cities?"
+    header = {'user-key' : key}
+    params = {'q' : city_state}
+    response = requests.get(url, headers = header, params = params)
+    data = response.json()
+    location = data.get('location_suggestions', None)
+    city_id = location[0]['id']
+    return city_id
+    
+def find_restaurants_nearby(key, city_id, cuisine):
+    
+    url = "https://developers.zomato.com/api/v2.1/search"
+    header = {'user-key' : key}
+    params = {'q' : cuisine, 'entity_type' : 'city' , 'entity_id' : city_id}
+    response = requests.get(url, params = params, headers = header)
+    results = response.json()
+    restuarants_nearby = results['restaurants']
+    return restuarants_nearby
+
+
+location = input("Please enter your location(i.e. Chicago, IL): ")
+coordinates = get_coordinates(location) # returns longitude and latitude
+forecast = get_forecast(coordinates) 
+forecasthigh_today = forecast[0]['temperatureHigh'] #the high temp for today
+forecastlow_today = forecast[0]['temperatureLow'] # the low temp for today
+print(f'In {location}, the high for today is {forecasthigh_today}\u00b0F and the low is {forecastlow_today}\u00b0F.')
+
+setting = input("Would you like to eat outdoors based on the weather(Y/N): ")
+
+your_location = (coordinates['lat'], coordinates['lng'])
+stategeojson = 'NYC4-us-states.json'
+map = folium.Map(location = your_location, zoom_start = 11)
+map
