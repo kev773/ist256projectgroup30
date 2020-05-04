@@ -1,0 +1,42 @@
+!pip install opencage
+from opencage.geocoder import OpenCageGeocode
+import requests
+import json 
+from pprint import pprint
+
+
+def get_coordinates(location):
+    key = "b95381b5aa684519970f06c731aa464a"
+    geocoder = OpenCageGeocode(key) 
+    coordinates = geocoder.geocode(location)[0]['geometry']
+    return coordinates
+
+def get_city_id(key, city_state):
+    
+    url = "https://developers.zomato.com/api/v2.1/cities?"
+    header = {'user-key' : key}
+    params = {'q' : city_state}
+    response = requests.get(url, headers = header, params = params)
+    data = response.json()
+    location = data.get('location_suggestions', None)
+    city_id = location[0]['id']
+    return city_id
+    
+
+def find_restaurants_nearby(key, city_id, cuisine):
+    
+    url = "https://developers.zomato.com/api/v2.1/search"
+    header = {'user-key' : key}
+    querystring = {'q' : cuisine, 'entity_type' : 'city' , 'entity_id' : city_id}
+    response = requests.get(url, params = querystring, headers = header)
+    results = response.json()
+    restuarants_nearby = results['restaurants']
+    return restuarants_nearby
+
+key = "f71442e7a082aa773da23647ab9c0650"
+location = input("Please enter your location(i.e. Chicago, IL): ")
+coordinates = get_coordinates(location)
+cuisine = input("What type of cuisine would you like to eat: ")
+city_id = get_city_id(key, location)
+restaurants = find_restaurants_nearby(key, city_id, cuisine)
+
