@@ -1,0 +1,104 @@
+!pip install opencage
+from opencage.geocoder import OpenCageGeocode
+
+import json 
+import folium
+import requests
+import pandas as pd
+import numpy as np
+from pprint import pprint
+from pandas.io.json import json_normalize
+
+def get_coordinates(location):      
+    key = "b95381b5aa684519970f06c731aa464a"
+    geocoder = OpenCageGeocode(key) 
+    coordinates = geocoder.geocode(location)[0]['geometry']
+    return coordinates #function returns longitude and latitude of the given location
+
+def get_forecast(coordinates):     
+    darkskykey = "443a4203c3f7801ddcd986b1edae011e"
+    latitude = coordinates['lat'] 
+    longitude = coordinates['lng']
+    url = f"https://api.darksky.net/forecast/{darkskykey}/{latitude},{longitude}" #url requires key,lat, and lng to work
+    response = requests.get(url)
+    response = response.json()
+    forecast_today = response['daily']['data'][0] #retrieving the forecast data for the current day
+    return forecast_today #function uses the coordinates of a location to get the day's forecast
+
+#try to stitch this
+def get_city_id(key, location):     
+    
+    url = "https://developers.zomato.com/api/v2.1/cities?"
+    header = {'user-key' : key}
+    params = {'q' : location}
+    response = requests.get(url, headers = header, params = params)
+    data = response.json()
+    location = data.get('location_suggestions', None)
+    city_id = location[0]['id']
+    return city_id #function returns the city id for the given location
+    
+def find_restaurants_nearby(key, city_id, cuisine):      
+    
+    url = "https://developers.zomato.com/api/v2.1/search"
+    header = {'user-key' : key}
+    params = {'q' : cuisine, 'entity_type' : 'city' , 'entity_id' : city_id}
+    response = requests.get(url, params = params, headers = header)
+    results = response.json()
+    restuarants_nearby = results['restaurants']
+    return restuarants_nearby # function returns a list of 20 dictionaries which are restaurants that fit the type of food they want
+
+
+from IPython.display import display, HTML
+display(HTML("<h1><i><u>Map Restaurants Near You</u></i></h1>"))
+display(HTML("<h4><i>brought to you by IST 256 Group 30</i></h4>"))
+
+while True:
+    try:
+        location = input("Please enter your location(i.e. Chicago, IL): ")
+        coordinates = get_coordinates(location) # returns longitude and latitude
+        forecast = get_forecast(coordinates) 
+        forecasthigh = forecast['temperatureHigh'] #the high temp for today
+        forecastlow = forecast['temperatureLow'] # the low temp for today
+        print(f'In {location}, the high for today is {forecasthigh}\u00b0F and the low is {forecastlow}\u00b0F.')
+        break
+    except:
+        print("Please enter a valid location")
+    
+
+key = "f71442e7a082aa773da23647ab9c0650"
+city_id = get_city_id(key, location) #city id of inputted location
+
+
+while True:
+    try:
+        cuisine = input("What type of cuisine would you like to eat: ") 
+        list_of_restaurants = find_restaurants_nearby(key, city_id, cuisine)  # list of dictionaries with all the restaurant results 
+        normalized_data = json_normalize(list_of_restaurants) #organizes complicated data such as nested dictionaries
+        original_df = pd.DataFrame(normalized_data) #pandas dataframe of the 20 restuarants that come up
+        name = original_df['restaurant.name']
+        address = original_df['restaurant.location.address']
+        longitude = original_df['restaurant.location.longitude']
+        latitude = original_df['restaurant.location.latitude']
+        price_range = original_df['restaurant.price_range']
+        break
+    except:
+       # print("You incorrectly entered:",h)
+        print("Please enter a real cuisine!")
+
+
+
+simplified_df = pd.DataFrame({'Restaurant Name' : name , 'Address' : address, 'Price Range' : price_range, 'Longitude' : longitude, 'Latitude' : latitude })
+#making a simpler pandas dataframe that only has these five columns/keys
+
+your_location = (coordinates['lat'], coordinates['lng'])
+stategeojson = 'NYC4-us-states.json'
+map = folium.Map(location = your_location, zoom_start = 13)
+
+for row in simplified_df.to_records():
+    pos = ( row['Latitude'] , row['Longitude'] )
+    message = f"{row['Restaurant Name']} has a {row['Price Range']} price range" #name and price range will be displayed at each marker on the map 
+    marker = folium.Marker(location = pos, 
+                    popup = message
+                          )
+    map.add_child(marker)
+map
